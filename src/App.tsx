@@ -796,7 +796,7 @@ function App() {
       </main>
       
       <History history={gameState.sessionHistory} />
-      <Statistics history={gameState.history} />
+      <Statistics history={gameState.sessionHistory} />
     </div>
   );
 }

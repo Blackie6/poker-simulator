@@ -1,0 +1,72 @@
+.history-panel {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  width: 300px;
+  max-height: 80vh;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.history-panel h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.history-content {
+  overflow-y: auto;
+  max-height: calc(80vh - 60px);
+}
+
+.history-line {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.history-line.correct {
+  color: #059669;
+}
+
+.history-line.incorrect {
+  color: #dc2626;
+}
+
+.no-history {
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Scrollbar styling */
+.history-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.history-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.history-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+} 

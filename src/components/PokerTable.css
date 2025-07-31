@@ -75,57 +75,99 @@
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .poker-table {
-    width: 95vw;
-    max-width: 400px;
-    height: 300px;
-    border-radius: 100px;
-    border: 4px solid #8b4513;
-    margin: 10px auto;
-  }
-  
-  .pot {
-    padding: 8px 16px;
-    font-size: 1rem;
-    border-radius: 15px;
-  }
-  
-  .community-cards {
-    gap: 5px;
-  }
-  
-  .community-cards-label {
-    padding: 4px 12px;
-    font-size: 0.8rem;
-    border-radius: 10px;
-    margin-bottom: 5px;
-  }
-  
-  .community-cards-container {
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .poker-table {
     width: 90vw;
-    height: 250px;
+    max-width: 350px;
+    height: 280px;
     border-radius: 80px;
-    border: 3px solid #8b4513;
+    border: 4px solid #8b4513;
+    margin: 15px auto;
   }
   
   .pot {
     padding: 6px 12px;
     font-size: 0.9rem;
     border-radius: 12px;
+    top: 30%;
+  }
+  
+  .community-cards {
+    gap: 3px;
+    top: 45%;
   }
   
   .community-cards-label {
-    padding: 3px 10px;
+    padding: 3px 8px;
     font-size: 0.7rem;
     border-radius: 8px;
+    margin-bottom: 3px;
   }
   
   .community-cards-container {
-    gap: 6px;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .poker-table {
+    width: 85vw;
+    height: 220px;
+    border-radius: 60px;
+    border: 3px solid #8b4513;
+    margin: 10px auto;
+  }
+  
+  .pot {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    top: 25%;
+  }
+  
+  .community-cards {
+    gap: 2px;
+    top: 40%;
+  }
+  
+  .community-cards-label {
+    padding: 2px 6px;
+    font-size: 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 2px;
+  }
+  
+  .community-cards-container {
+    gap: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .poker-table {
+    width: 80vw;
+    height: 180px;
+    border-radius: 50px;
+    border: 2px solid #8b4513;
+  }
+  
+  .pot {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    border-radius: 8px;
+    top: 20%;
+  }
+  
+  .community-cards {
+    gap: 1px;
+    top: 35%;
+  }
+  
+  .community-cards-label {
+    padding: 1px 4px;
+    font-size: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 1px;
+  }
+  
+  .community-cards-container {
+    gap: 2px;
   }
 } 

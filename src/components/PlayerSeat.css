@@ -119,54 +119,14 @@
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .player-seat {
-    gap: 5px;
+    gap: 3px;
   }
   
   .player-seat.current {
-    padding: 5px;
-    border-radius: 8px;
+    padding: 3px;
+    border-radius: 6px;
   }
   
-  .player-info {
-    padding: 6px 10px;
-    min-width: 100px;
-  }
-  
-  .player-name {
-    font-size: 0.8rem;
-  }
-  
-  .player-position {
-    font-size: 0.7rem;
-  }
-  
-  .player-hand {
-    font-size: 0.7rem;
-  }
-  
-  .player-chips {
-    font-size: 0.7rem;
-  }
-  
-  .dealer-button {
-    width: 16px;
-    height: 16px;
-    font-size: 0.6rem;
-  }
-  
-  .folded-indicator {
-    padding: 3px 6px;
-    font-size: 0.6rem;
-  }
-  
-  .last-action {
-    padding: 3px 6px;
-    font-size: 0.6rem;
-    margin-top: 3px;
-  }
-}
-
-@media (max-width: 480px) {
   .player-info {
     padding: 4px 8px;
     min-width: 80px;
@@ -202,5 +162,88 @@
   .last-action {
     padding: 2px 4px;
     font-size: 0.5rem;
+    margin-top: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-seat {
+    gap: 2px;
+  }
+  
+  .player-info {
+    padding: 3px 6px;
+    min-width: 70px;
+  }
+  
+  .player-name {
+    font-size: 0.6rem;
+  }
+  
+  .player-position {
+    font-size: 0.5rem;
+  }
+  
+  .player-hand {
+    font-size: 0.5rem;
+  }
+  
+  .player-chips {
+    font-size: 0.5rem;
+  }
+  
+  .dealer-button {
+    width: 12px;
+    height: 12px;
+    font-size: 0.4rem;
+  }
+  
+  .folded-indicator {
+    padding: 1px 3px;
+    font-size: 0.4rem;
+  }
+  
+  .last-action {
+    padding: 1px 3px;
+    font-size: 0.4rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .player-info {
+    padding: 2px 4px;
+    min-width: 60px;
+  }
+  
+  .player-name {
+    font-size: 0.5rem;
+  }
+  
+  .player-position {
+    font-size: 0.4rem;
+  }
+  
+  .player-hand {
+    font-size: 0.4rem;
+  }
+  
+  .player-chips {
+    font-size: 0.4rem;
+  }
+  
+  .dealer-button {
+    width: 10px;
+    height: 10px;
+    font-size: 0.3rem;
+  }
+  
+  .folded-indicator {
+    padding: 1px 2px;
+    font-size: 0.3rem;
+  }
+  
+  .last-action {
+    padding: 1px 2px;
+    font-size: 0.3rem;
   }
 } 

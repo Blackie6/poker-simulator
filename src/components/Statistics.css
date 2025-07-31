@@ -1,7 +1,7 @@
 .statistics-panel {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  top: 20px;
   width: 300px;
   max-height: 80vh;
   background: rgba(255, 255, 255, 0.95);
@@ -96,7 +96,7 @@
   .statistics-panel {
     position: fixed;
     right: 10px;
-    bottom: 10px;
+    top: 10px;
     width: 280px;
     max-height: 60vh;
     padding: 12px;
@@ -120,7 +120,7 @@
 @media (max-width: 480px) {
   .statistics-panel {
     right: 5px;
-    bottom: 5px;
+    top: 5px;
     width: calc(50vw - 10px);
     max-width: 200px;
     max-height: 50vh;

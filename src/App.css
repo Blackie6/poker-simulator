@@ -83,12 +83,12 @@
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .App-header {
-    padding: 15px 10px;
+    padding: 12px 8px;
   }
   
   .header-content {
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
   }
   
@@ -101,59 +101,148 @@
   }
   
   .App-header h1 {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
+    font-size: 1.3rem;
+    margin-bottom: 3px;
   }
   
   .App-header p {
-    font-size: 1rem;
-    margin: 5px 0 0 0;
+    font-size: 0.9rem;
+    margin: 3px 0 0 0;
   }
   
   .game-info {
-    gap: 15px;
+    gap: 10px;
     flex-direction: column;
     align-items: center;
   }
   
   .game-info p {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
   
   .mode-toggle-button {
-    padding: 10px 16px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
   }
   
   .App-main {
-    padding: 10px;
-    padding-bottom: 140px;
+    padding: 8px;
+    padding-bottom: 120px;
   }
   
   .feedback {
-    padding: 15px;
-    margin: 10px;
-    max-width: 90vw;
+    padding: 12px;
+    margin: 8px;
+    max-width: 95vw;
   }
   
   .feedback h3 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
   
   .feedback p {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
   
   .next-hand-container {
     position: fixed;
-    bottom: 120px;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
   }
   
   .next-hand-button {
-    padding: 12px 20px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .App-header {
+    padding: 10px 6px;
+  }
+  
+  .App-header h1 {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+  }
+  
+  .App-header p {
+    font-size: 0.8rem;
+    margin: 2px 0 0 0;
+  }
+  
+  .game-info p {
+    font-size: 0.7rem;
+  }
+  
+  .mode-toggle-button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  
+  .App-main {
+    padding: 6px;
+    padding-bottom: 100px;
+  }
+  
+  .feedback {
+    padding: 10px;
+    margin: 5px;
+  }
+  
+  .feedback h3 {
     font-size: 1rem;
+  }
+  
+  .feedback p {
+    font-size: 0.7rem;
+  }
+  
+  .next-hand-container {
+    bottom: 80px;
+  }
+  
+  .next-hand-button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .App-header h1 {
+    font-size: 1rem;
+  }
+  
+  .App-header p {
+    font-size: 0.7rem;
+  }
+  
+  .game-info p {
+    font-size: 0.6rem;
+  }
+  
+  .mode-toggle-button {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+  
+  .App-main {
+    padding: 5px;
+    padding-bottom: 90px;
+  }
+  
+  .feedback h3 {
+    font-size: 0.9rem;
+  }
+  
+  .feedback p {
+    font-size: 0.6rem;
+  }
+  
+  .next-hand-button {
+    padding: 6px 10px;
+    font-size: 0.7rem;
   }
 }
 

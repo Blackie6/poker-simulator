@@ -1,7 +1,7 @@
 import React from 'react';
 import { Player } from '../types/poker';
 import Card from './Card';
-import { getHandNotation } from '../utils/pokerUtils';
+
 import './PlayerSeat.css';
 
 interface PlayerSeatProps {
@@ -50,7 +50,7 @@ const PlayerSeat: React.FC<PlayerSeatProps> = ({ player, isCurrentPlayer, isDeal
     y -= 100; // Смещаем человека выше (50 + 50)
   }
 
-  const handNotation = player.cards.length === 2 ? getHandNotation(player.cards) : '';
+
 
   return (
     <div 

@@ -1,31 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Action, GameStage, Player, Card, Position, SessionHistoryEntry } from './types/poker';
 import { 
   createDeck, 
   shuffleDeck, 
   dealCards, 
   getHandNotation, 
-  isActionCorrect, 
-  getFeedbackMessage, 
-  moveDealerButton,
-  isPostflopActionCorrect,
-  getPostflopFeedbackMessage,
-  getPostflopScenario,
-  dealCommunityCards,
-  getBoardTexture,
-  getPotType,
-  getHandStrength,
-  getBotActionsAfterPlayerRaise,
-  updateGameStateWithBotActions,
-  determineHeroPosition,
-  autoPlayBotActions,
-  getBotAction,
-  sequentialBotActions
+  dealCommunityCards
 } from './utils/pokerUtils';
 import { handRanges } from './data/handRanges';
 import PokerTable from './components/PokerTable';
 import ActionButtons from './components/ActionButtons';
-import Feedback from './components/Feedback';
+
 import History from './components/History';
 import Statistics from './components/Statistics';
 import BotActions from './components/BotActions';
@@ -63,7 +48,12 @@ function App() {
   const [showNextHandButton, setShowNextHandButton] = useState(false);
   const processBotRef = useRef<((playerIndex: number) => void) | null>(null);
   // Новый state для отслеживания текущего игрока, чей ход
-  const [currentActionIndex, setCurrentActionIndex] = useState(0);
+
+  const [isStartingNewHand, setIsStartingNewHand] = useState(false);
+  const [gameMode, setGameMode] = useState<'preflop-training' | 'postflop-training'>(() => {
+    const savedMode = localStorage.getItem('pokerGameMode');
+    return savedMode === 'postflop-training' ? 'postflop-training' : 'preflop-training';
+  });
 
   // Initialize game on component mount
   useEffect(() => {
@@ -71,10 +61,83 @@ function App() {
     initializeGame();
   }, []);
 
+  // Effect for checking hasRaise in postflop mode
+  useEffect(() => {
+    if (gameMode === 'postflop-training' && gameState.stage === 'preflop') {
+      const hasRaise = gameState.players.some(p => p.lastAction === 'raise');
+      const allPlayersActed = gameState.players.every(p => p.lastAction !== undefined || p.folded);
+      const allFolded = gameState.players.every(p => p.folded);
+      
+      console.log('useEffect checking hasRaise:', hasRaise);
+      console.log('All players acted:', allPlayersActed);
+      console.log('All players folded:', allFolded);
+      console.log('All players actions:', gameState.players.map(p => `${p.name}: ${p.lastAction} (folded: ${p.folded})`));
+      
+      // Если все сфолдили, начинаем новую раздачу
+      if (allFolded && allPlayersActed && !isStartingNewHand) {
+        console.log('All players folded, starting new hand');
+        setIsStartingNewHand(true);
+        setTimeout(() => {
+          startNewHandInPostflopMode();
+        }, 1000);
+        return;
+      }
+      
+      // Показываем флоп только если был рейз И все игроки сделали свои действия
+      if (hasRaise && allPlayersActed) {
+        console.log('Raise detected and all players acted, showing flop');
+        setTimeout(() => {
+          handleNextStage();
+        }, 1000);
+      }
+    }
+  }, [gameState.players, gameMode, gameState.stage]);
+
+  // Effect for saving gameMode to localStorage
+  useEffect(() => {
+    localStorage.setItem('pokerGameMode', gameMode);
+  }, [gameMode]);
+
+  // Function to toggle game mode
+  const toggleGameMode = () => {
+    const newMode = gameMode === 'preflop-training' ? 'postflop-training' : 'preflop-training';
+    setGameMode(newMode);
+    
+    // Save mode to localStorage
+    localStorage.setItem('pokerGameMode', newMode);
+    console.log(`Switched to ${newMode} mode and saved to localStorage`);
+    
+    // Save current session history before resetting
+    const currentSessionHistory = gameState.sessionHistory;
+    console.log('Saving current session history:', currentSessionHistory.length, 'entries');
+    
+    // Reset game state for new mode
+    setShowPlayerActions(false);
+    setShowBotActions(false);
+    setBotsStarted(false);
+    setPreflopCompleted(false);
+    setShowNextHandButton(false);
+    
+    // Clear processBotRef before reinitializing
+    processBotRef.current = null;
+    console.log('processBotRef.current cleared during mode switch');
+    
+    // Reinitialize game with new mode, preserving session history
+    setTimeout(() => {
+      // Temporarily set session history to preserve it during initialization
+      setGameState(prev => ({
+        ...prev,
+        sessionHistory: currentSessionHistory
+      }));
+      initializeGame();
+    }, 100);
+  };
+
   // Новый порядок действий для префлопа
   const actionOrder: Position[] = ['UTG', 'HJ', 'CO', 'BU', 'SB', 'BB'];
 
   const autoPlayBots = useCallback(() => {
+    console.log('autoPlayBots called, gameMode:', gameMode);
     const currentPlayersInState = gameState.players;
     const actionOrder: Position[] = ['UTG', 'HJ', 'CO', 'BU', 'SB', 'BB'];
     const sortedActionPlayers = actionOrder
@@ -84,10 +147,32 @@ function App() {
     // Локальная переменная для подсчета рейзов в этом раунде
     let raiseCountInRound = 0;
 
-    const processPlayer = (playerIndex: number) => {
+    const processPlayer = (playerIndex: number, currentGameMode: 'preflop-training' | 'postflop-training' = gameMode, currentPlayers?: Player[]) => {
+      console.log(`processPlayer called with index: ${playerIndex}, gameMode: ${currentGameMode}`);
       if (playerIndex >= sortedActionPlayers.length) {
-        setPreflopCompleted(true);
-        setShowNextHandButton(true);
+        // Разделяем логику для префлоп и постфлоп режимов
+        if (currentGameMode === 'postflop-training') {
+          // В постфлоп режиме проверяем, сфолдили ли все игроки
+          const allFolded = sortedActionPlayers.every(player => player?.folded);
+          
+          if (allFolded && !isStartingNewHand) {
+            console.log('All players folded in postflop mode, starting new hand');
+            setShowPlayerActions(false);
+            setShowBotActions(false);
+            setIsStartingNewHand(true);
+            setTimeout(() => {
+              startNewHandInPostflopMode();
+            }, 1000);
+            return;
+          }
+          
+          console.log('Round completed in postflop mode, waiting for useEffect to check hasRaise');
+          // useEffect автоматически проверит hasRaise и покажет флоп или начнет новую руку
+        } else {
+          // В префлоп режиме показываем кнопку Next Hand (как раньше)
+          setPreflopCompleted(true);
+          setShowNextHandButton(true);
+        }
         setShowPlayerActions(false);
         setShowBotActions(false);
         return;
@@ -101,7 +186,7 @@ function App() {
       if (player.isHuman) {
         setShowPlayerActions(true);
         setShowBotActions(false);
-        setCurrentActionIndex(playerIndex);
+
         return;
       }
       const handNotation = getHandNotation(player.cards);
@@ -140,7 +225,7 @@ function App() {
         });
 
         setTimeout(() => {
-          processPlayer(playerIndex + 1);
+          processPlayer(playerIndex + 1, currentGameMode, currentPlayers);
         }, 1000);
         return;
       }
@@ -248,7 +333,8 @@ function App() {
     };
 
     // Сохраняем ссылку на функцию
-    processBotRef.current = processPlayer;
+    processBotRef.current = (playerIndex: number, currentPlayers?: Player[]) => processPlayer(playerIndex, gameMode, currentPlayers);
+    console.log('processBotRef.current set to processPlayer function');
 
     // Начинаем с первого бота
     processPlayer(0);
@@ -260,6 +346,7 @@ function App() {
       console.log('Starting bot actions...');
       console.log('Current game state:', gameState);
       console.log('Players count:', gameState.players.length);
+      console.log('Current gameMode:', gameMode);
       setBotsStarted(true);
       
       // Добавляем небольшую задержку для обеспечения полного обновления состояния
@@ -267,7 +354,7 @@ function App() {
         autoPlayBots();
       }, 500);
     }
-  }, [botsStarted, preflopCompleted, autoPlayBots, gameState.players.length]);
+  }, [botsStarted, preflopCompleted, autoPlayBots, gameState.players.length, gameMode]);
 
   // Функция для обработки действий ботов после игрока (удалена - теперь все в основном потоке)
 
@@ -348,28 +435,40 @@ function App() {
       playerActionAmount = gameState.currentBet || 0;
     }
     
+    // Create updated players array for immediate use
+    const updatedPlayers = [...gameState.players];
+    const playerIndex = updatedPlayers.findIndex(p => p.isHuman);
+    
+    if (playerIndex !== -1) {
+      updatedPlayers[playerIndex] = {
+        ...humanPlayer,
+        lastAction: action,
+        lastActionAmount: playerActionAmount,
+        bet: action === 'fold' ? 0 : playerActionAmount,
+        folded: action === 'fold',
+        cards: humanPlayer.cards || []
+      } as Player;
+      
+      console.log('Updated player in handleAction:', {
+        name: updatedPlayers[playerIndex].name,
+        lastAction: updatedPlayers[playerIndex].lastAction,
+        folded: updatedPlayers[playerIndex].folded,
+        bet: updatedPlayers[playerIndex].bet
+      });
+    }
+    
     // Update game state
     setGameState(prev => {
-      const updatedPlayers = [...prev.players];
-      const playerIndex = updatedPlayers.findIndex(p => p.isHuman);
-      
-      if (playerIndex !== -1) {
-        updatedPlayers[playerIndex] = {
-          ...humanPlayer,
-          lastAction: action,
-          lastActionAmount: playerActionAmount,
-          bet: action === 'fold' ? 0 : playerActionAmount,
-          folded: action === 'fold',
-          cards: humanPlayer.cards || []
-        } as Player;
-      }
+      const newSessionHistory = [...prev.sessionHistory, sessionEntry];
+      console.log('Updated session history:', newSessionHistory.length, 'entries');
+      console.log('Latest entry:', sessionEntry);
       
       return {
         ...prev,
         players: updatedPlayers,
         currentBet: action === 'raise' ? playerActionAmount : prev.currentBet,
         pot: prev.pot + playerActionAmount,
-        sessionHistory: [...prev.sessionHistory, sessionEntry],
+        sessionHistory: newSessionHistory,
         feedback: {
           show: true,
           correct: evaluation.isCorrect,
@@ -382,7 +481,7 @@ function App() {
     setShowPlayerActions(false);
     
     // В режиме тренировки продолжаем основной поток действий после игрока
-    if (gameState.gameMode === 'preflop-training') {
+    if (gameMode === 'preflop-training') {
       // Скрываем фидбек через 2 секунды
       setTimeout(() => {
         setGameState(prev => ({
@@ -400,24 +499,28 @@ function App() {
         console.log('Continuing action flow after player...');
         console.log('Current game state after player action:', gameState);
         
-        // Получаем актуальное состояние игроков
-        const currentPlayers = gameState.players;
-        const actionPlayers = currentPlayers.filter((p: any) => true); // Включаем всех
+        // Получаем актуальное состояние игроков с обновленными данными
+        const currentPlayers = updatedPlayers;
+
         const sortedActionPlayers = actionOrder
           .map(pos => currentPlayers.find(p => p.position === pos))
           .filter(Boolean);
         
         // Находим индекс человека в отсортированном списке
-        const humanIndex = sortedActionPlayers.findIndex(p => p.isHuman);
+        const humanIndex = sortedActionPlayers.findIndex(p => p?.isHuman);
         console.log('Human index in sorted list:', humanIndex);
-        console.log('Sorted players:', sortedActionPlayers.map(p => `${p.name} (${p.position})`));
-        console.log('Players after human:', sortedActionPlayers.slice(humanIndex + 1).map(p => `${p.name} (${p.position})`));
+        console.log('Sorted players:', sortedActionPlayers.map(p => `${p?.name} (${p?.position})`));
+        console.log('Players after human:', sortedActionPlayers.slice(humanIndex + 1).map(p => `${p?.name} (${p?.position})`));
         
         if (humanIndex !== -1 && humanIndex + 1 < sortedActionPlayers.length) {
           // Продолжаем с следующего игрока после человека
-          console.log(`Continuing with player ${humanIndex + 1}: ${sortedActionPlayers[humanIndex + 1].name}`);
-          if (processBotRef.current) {
-            processBotRef.current(humanIndex + 1);
+          console.log(`Continuing with player ${humanIndex + 1}: ${sortedActionPlayers[humanIndex + 1]?.name}`);
+          console.log('processBotRef.current exists (preflop):', !!processBotRef.current);
+                         if (processBotRef.current) {
+                 console.log('Calling processBotRef.current with index (preflop):', humanIndex + 1);
+                 processBotRef.current(humanIndex + 1);
+               } else {
+            console.error('processBotRef.current is null in preflop mode!');
           }
         } else {
           // Человек был последним, завершаем раунд
@@ -427,7 +530,8 @@ function App() {
         }
       }, 1000);
     } else {
-      // Hide feedback after 3 seconds and automatically move to next stage
+      // Post-flop mode logic
+      // Скрываем фидбек через 2 секунды
       setTimeout(() => {
         setGameState(prev => ({
           ...prev,
@@ -437,10 +541,62 @@ function App() {
             message: ''
           }
         }));
+      }, 2000);
+      
+      // Проверяем, сбросил ли игрок карты
+      const humanPlayer = gameState.players.find(p => p.isHuman);
+      if (humanPlayer && humanPlayer.folded) {
+        // Если игрок сбросил карты, переходим к следующей раздаче
+        console.log('Player folded, starting new hand');
+        setTimeout(() => {
+          nextHand();
+        }, 1000);
+        return;
+      }
+      
+      // Продолжаем основной поток действий после игрока (как в префлопе)
+      setTimeout(() => {
+        console.log('Continuing action flow after player in postflop mode...');
+        console.log('Current game state after player action:', gameState);
         
-        // Automatically move to next stage
-        handleNextStage();
-      }, 3000);
+        // Получаем актуальное состояние игроков с обновленными данными
+        const currentPlayers = updatedPlayers;
+        const sortedActionPlayers = actionOrder
+          .map(pos => currentPlayers.find(p => p.position === pos))
+          .filter(Boolean);
+        
+        // Находим индекс человека в отсортированном списке
+        const humanIndex = sortedActionPlayers.findIndex(p => p?.isHuman);
+        console.log('Human index in sorted list:', humanIndex);
+        console.log('Sorted players:', sortedActionPlayers.map(p => `${p?.name} (${p?.position})`));
+        console.log('Players after human:', sortedActionPlayers.slice(humanIndex + 1).map(p => `${p?.name} (${p?.position})`));
+        
+        if (humanIndex !== -1 && humanIndex + 1 < sortedActionPlayers.length) {
+          // Продолжаем с следующего игрока после человека
+          console.log(`Continuing with player ${humanIndex + 1}: ${sortedActionPlayers[humanIndex + 1]?.name}`);
+          console.log('processBotRef.current exists (postflop):', !!processBotRef.current);
+                         if (processBotRef.current) {
+                 console.log('Calling processBotRef.current with index (postflop):', humanIndex + 1);
+                 processBotRef.current(humanIndex + 1);
+               } else {
+            console.error('processBotRef.current is null in postflop mode!');
+          }
+        } else {
+          // Человек был последним, проверяем был ли рейз
+          const hasRaise = gameState.players.some(p => p.lastAction === 'raise');
+          if (hasRaise) {
+            // Показываем флоп вместо кнопки Next Hand
+            setTimeout(() => {
+              handleNextStage();
+            }, 1000);
+          } else {
+            // Если не было рейза, переходим к следующей раздаче
+            setTimeout(() => {
+              nextHand();
+            }, 1000);
+          }
+        }
+      }, 1000);
     }
   };
 
@@ -481,8 +637,8 @@ function App() {
       currentBet: 0,
       lastRaiser: undefined,
       pot: 0,
-      gameMode: 'preflop-training',
-      sessionHistory: [],
+      gameMode: gameMode, // Используем текущий режим
+      sessionHistory: gameState.sessionHistory, // Сохраняем существующую статистику
       currentPosition: 'BU',
       isTrainingMode: true
     };
@@ -501,43 +657,63 @@ function App() {
   };
 
   const handleNextStage = () => {
-          
-          // If player folded, go directly to next hand
-    if (gameState.players[gameState.currentPlayerIndex]?.lastAction === 'fold') {
-            nextHand();
+    console.log('handleNextStage called');
+    console.log('Current stage:', gameState.stage);
+    console.log('Current player index:', gameState.currentPlayerIndex);
+    console.log('All players actions:', gameState.players.map(p => `${p.name}: ${p.lastAction} (folded: ${p.folded})`));
+    
+    // Защита от множественных вызовов
+    if (gameState.stage !== 'preflop' && gameState.stage !== 'flop' && gameState.stage !== 'turn') {
+      console.log('handleNextStage called for invalid stage, ignoring');
       return;
-          }
-          
-          // Determine next stage
-          let nextStage: GameStage;
+    }
+    
+    // Check if human player folded
+    const humanPlayer = gameState.players.find(p => p.isHuman);
+    if (humanPlayer && humanPlayer.folded) {
+      console.log('Human player folded, going to next hand');
+      nextHand();
+      return;
+    }
+    
+    // Determine next stage
+    let nextStage: GameStage;
     if (gameState.stage === 'preflop') {
-            nextStage = 'flop';
+      nextStage = 'flop';
     } else if (gameState.stage === 'flop') {
-            nextStage = 'turn';
+      nextStage = 'turn';
     } else if (gameState.stage === 'turn') {
-            nextStage = 'river';
-          } else {
-            // River - move to next hand
-            nextHand();
+      nextStage = 'river';
+    } else {
+      // River - move to next hand
+      nextHand();
       return;
-          }
-          
-          // Deal community cards for next stage
-          const { cards: newCommunityCards, remainingDeck: newRemainingDeck } = dealCommunityCards(remainingDeck, nextStage);
-          
-          setRemainingDeck(newRemainingDeck);
-          
+    }
+    
+    // Deal community cards for next stage
+    const { cards: newCommunityCards, remainingDeck: newRemainingDeck } = dealCommunityCards(remainingDeck, nextStage);
+    
+    console.log(`Dealing ${newCommunityCards.length} cards for ${nextStage}:`, newCommunityCards.map(c => `${c.rank}${c.suit}`));
+    
+    setRemainingDeck(newRemainingDeck);
+    
     setGameState(prev => {
       const newState = {
-            ...prev,
-            stage: nextStage,
-            communityCards: [...prev.communityCards, ...newCommunityCards],
-            feedback: {
-              show: false,
-              correct: false,
-              message: ''
-            }
-          };
+        ...prev,
+        stage: nextStage,
+        communityCards: [...prev.communityCards, ...newCommunityCards],
+        feedback: {
+          show: false,
+          correct: false,
+          message: ''
+        }
+      };
+      
+      console.log('Updated game state with new community cards:');
+      console.log('Previous community cards:', prev.communityCards.map(c => `${c.rank}${c.suit}`));
+      console.log('New community cards:', newCommunityCards.map(c => `${c.rank}${c.suit}`));
+      console.log('Total community cards:', newState.communityCards.map(c => `${c.rank}${c.suit}`));
+      console.log('New stage:', nextStage);
       
       // Дополнительная проверка сохранения карт
       newState.players = newState.players.map((player: any, index: number) => ({
@@ -548,44 +724,98 @@ function App() {
       return newState;
     });
     
-    // Hide next stage button and show player actions again
-    setShowPlayerActions(true);
+    // В постфлоп режиме показываем действия игрока только если он не сбросил карты
+    const currentHumanPlayer = gameState.players.find(p => p.isHuman);
+    if (currentHumanPlayer && !currentHumanPlayer.folded) {
+      console.log('Player is still in hand, showing actions for postflop');
+      setShowPlayerActions(true);
+    } else {
+      // Если игрок сбросил карты, переходим к следующей раздаче
+      console.log('Player folded, starting new hand');
+      nextHand();
+    }
   };
 
-  const nextStage = () => {
-    const stages: GameStage[] = ['preflop', 'flop', 'turn', 'river'];
-    const currentStageIndex = stages.indexOf(gameState.stage);
-    const nextStage = stages[currentStageIndex + 1];
+
+
+  const startNewHandInPostflopMode = () => {
+    console.log('=== STARTING NEW HAND IN POSTFLOP MODE ===');
+    console.log('Current hand number:', gameState.handNumber);
+    console.log('Current players state:', gameState.players.map(p => `${p.name}: ${p.position} (folded: ${p.folded})`));
     
-    if (nextStage) {
-      const { cards: newCommunityCards, remainingDeck: newRemainingDeck } = dealCommunityCards(remainingDeck, nextStage);
+    // Rotate positions: BU -> SB -> BB -> UTG -> HJ -> CO -> BU
+    const positions: Position[] = ['BU', 'SB', 'BB', 'UTG', 'HJ', 'CO'];
+    
+    // Обновляем позиции игроков - сдвигаем влево (по часовой стрелке)
+    const updatedPlayers = gameState.players.map((player) => {
+      // Находим текущую позицию игрока в массиве positions
+      const currentPositionIndex = positions.indexOf(player.position);
+      // Сдвигаем влево: (currentPositionIndex - 1 + 6) % 6
+      const newPositionIndex = (currentPositionIndex - 1 + 6) % 6;
+      const newPosition = positions[newPositionIndex];
       
-      setGameState(prev => ({
-        ...prev,
-        stage: nextStage,
-        communityCards: [...prev.communityCards, ...newCommunityCards],
-        bettingRound: nextStage as 'preflop' | 'flop' | 'turn' | 'river'
-      }));
-      
-      setRemainingDeck(newRemainingDeck);
-    }
+      return {
+        ...player,
+        position: newPosition,
+        isDealer: newPosition === 'BU', // Дилер - это тот, у кого позиция BU
+        folded: false,
+        lastAction: undefined,
+        lastActionAmount: undefined,
+        bet: 0
+      };
+    });
+    
+    // Определяем новую позицию человека
+    const humanPlayer = updatedPlayers.find(p => p.isHuman);
+    const newHumanPosition = humanPlayer?.position || 'BU';
+    
+    // Находим нового дилера для проверки
+    const newDealerPlayer = updatedPlayers.find(p => p.isDealer);
+    const newDealerIndex = updatedPlayers.findIndex(p => p.isDealer);
+    
+    console.log('Next dealer player:', newDealerPlayer?.name);
+    console.log('New dealer index:', newDealerIndex);
+    console.log('Updated players after rotation:', updatedPlayers.map(p => `${p.name}: ${p.position}${p.isDealer ? ' (BU)' : ''}${p.isHuman ? ' (Human)' : ''}`));
+    
+    // Создаем новую колоду и раздаем карты
+    const deck = createDeck();
+    const shuffledDeck = shuffleDeck(deck);
+    const { players: dealtPlayers, remainingDeck } = dealCards(updatedPlayers, shuffledDeck);
+    
+    setGameState(prev => ({
+      ...prev,
+      players: dealtPlayers,
+      dealerIndex: newDealerIndex,
+      handNumber: prev.handNumber + 1,
+      stage: 'preflop',
+      communityCards: [],
+      currentBet: 0,
+      pot: 0,
+      currentPosition: newHumanPosition,
+      feedback: { show: false, correct: false, message: '' },
+      gameMode: gameMode
+    }));
+    
+    setRemainingDeck(remainingDeck);
+    
+    // Reset flags for new hand
+    setShowPlayerActions(false);
+    setShowBotActions(false);
+    setBotsStarted(false);
+    setPreflopCompleted(false);
+    setShowNextHandButton(false);
+    setIsStartingNewHand(false);
+    
+    // Start bot actions after a short delay
+    setTimeout(() => {
+      autoPlayBots();
+    }, 500);
   };
 
   const nextHand = () => {
     
-    // Keep human as dealer, just rotate positions
-    const newPlayers = gameState.players.map((player, index) => {
-      if (player.isHuman) {
-        return { ...player, isDealer: true };
-      } else {
-        return { ...player, isDealer: false };
-      }
-    });
-    
     // Rotate positions: BU -> SB -> BB -> UTG -> HJ -> CO -> BU
-    // But keep human always at BU (position 0)
     const positions: Position[] = ['BU', 'SB', 'BB', 'UTG', 'HJ', 'CO'];
-    const rotatedPositions = [...positions.slice(1), positions[0]]; // Rotate positions
     
     // Обновляем позиции игроков - сдвигаем влево (по часовой стрелке)
     const updatedPlayers = gameState.players.map((player) => {
@@ -640,7 +870,8 @@ function App() {
       currentBet: 0,
       pot: 0,
       currentPosition: newHumanPosition,
-      feedback: { show: false, correct: false, message: '' }
+      feedback: { show: false, correct: false, message: '' },
+      gameMode: gameMode // Обновляем режим игры
     }));
     
     setRemainingDeck(remainingDeck);
@@ -733,7 +964,8 @@ function App() {
       currentBet: 0,
       pot: 0,
       currentPosition: newHumanPosition,
-      feedback: { show: false, correct: false, message: '' }
+      feedback: { show: false, correct: false, message: '' },
+      gameMode: gameMode // Обновляем режим игры
     }));
     
     setRemainingDeck(remainingDeck);
@@ -749,12 +981,24 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Poker Simulator - Preflop Training</h1>
-        <div className="game-info">
-        <p>Hand #{gameState.handNumber} - {gameState.stage.toUpperCase()}</p>
-          <p>Your Position: {gameState.currentPosition}</p>
-          <p>Dealer: {gameState.players[gameState.dealerIndex]?.name} (BU)</p>
-          <p>Players: {gameState.players.filter(p => !p.folded).length}/6 active</p>
+        <div className="header-content">
+          <div className="header-left">
+            <h1>Poker Simulator - {gameMode === 'preflop-training' ? 'Preflop' : 'Post-Flop'} Training</h1>
+            <div className="game-info">
+              <p>Hand #{gameState.handNumber} - {gameState.stage.toUpperCase()}</p>
+              <p>Your Position: {gameState.currentPosition}</p>
+              <p>Dealer: {gameState.players[gameState.dealerIndex]?.name} (BU)</p>
+              <p>Players: {gameState.players.filter(p => !p.folded).length}/6 active</p>
+            </div>
+          </div>
+          <div className="header-right">
+            <button 
+              className="mode-toggle-button"
+              onClick={toggleGameMode}
+            >
+              Switch to {gameMode === 'preflop-training' ? 'Post-Flop' : 'Preflop'} Mode
+            </button>
+          </div>
         </div>
       </header>
       
@@ -774,8 +1018,8 @@ function App() {
         <BotActions botActions={gameState.botActions} isVisible={showBotActions} />
         )}
 
-        {/* Next Hand button */}
-        {showNextHandButton && (
+        {/* Next Hand button - только в префлоп режиме */}
+        {showNextHandButton && gameMode === 'preflop-training' && (
           <div className="next-hand-container">
             <button 
               className="next-hand-button"

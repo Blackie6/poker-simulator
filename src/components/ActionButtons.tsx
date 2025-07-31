@@ -61,16 +61,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, stage }) => {
         Call
       </button>
       <button
-        className="action-btn bet"
-        onClick={() => onAction('bet')}
+        className="action-btn raise"
+        onClick={() => onAction('raise')}
       >
-        Bet
-      </button>
-      <button
-        className="action-btn check_raise"
-        onClick={() => onAction('check_raise')}
-      >
-        Check/Raise
+        Raise
       </button>
     </div>
   );

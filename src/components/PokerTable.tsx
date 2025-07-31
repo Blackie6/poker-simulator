@@ -9,13 +9,25 @@ interface PokerTableProps {
 }
 
 const PokerTable: React.FC<PokerTableProps> = ({ gameState }) => {
+  console.log('PokerTable render - community cards:', gameState.communityCards.map(c => `${c.rank}${c.suit}`));
+  console.log('PokerTable render - stage:', gameState.stage);
+  
   return (
     <div className="poker-table">
       {/* Community cards */}
       <div className="community-cards">
-        {gameState.communityCards.map((card, index) => (
-          <Card key={index} card={card} show={true} />
-        ))}
+        {gameState.communityCards.length > 0 && (
+          <div className="community-cards-label">
+            {gameState.stage === 'flop' ? 'FLOP' : 
+             gameState.stage === 'turn' ? 'TURN' : 
+             gameState.stage === 'river' ? 'RIVER' : 'COMMUNITY CARDS'}
+          </div>
+        )}
+        <div className="community-cards-container">
+          {gameState.communityCards.map((card, index) => (
+            <Card key={index} card={card} show={true} />
+          ))}
+        </div>
       </div>
       
       {/* Player seats */}

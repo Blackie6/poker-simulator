@@ -21,7 +21,7 @@
 
 .pot {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(255, 255, 255, 0.9);
@@ -36,7 +36,7 @@
 
 .community-cards {
   position: absolute;
-  top: 35%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -55,12 +55,15 @@
   color: #333;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-bottom: 10px;
 }
 
 .community-cards-container {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   align-items: center;
+  justify-content: center;
+  flex-direction: row;
 }
 
 .players-container {

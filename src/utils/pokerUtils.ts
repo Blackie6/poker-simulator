@@ -1,6 +1,6 @@
 import { Card, Rank, Suit, Position, Action, Player, GameStage, BoardTexture, PotType, PostflopAction, BotAction } from '../types/poker';
 import { handRanges } from '../data/handRanges';
-import { postflopStrategies, getBoardTexture, getPotType, getHandStrength } from '../data/postflopStrategies';
+import { postflopStrategies } from '../data/postflopStrategies';
 
 // Create a deck of cards
 export function createDeck(): Card[] {
@@ -354,13 +354,11 @@ export function dealCommunityCards(deck: Card[], stage: GameStage): { cards: Car
   return { cards, remainingDeck };
 } 
 
-// Export the helper functions from postflopStrategies
-export { getBoardTexture, getPotType, getHandStrength } from '../data/postflopStrategies'; 
+ 
 
 // Bot action logic
 export function getBotActionsAfterPlayerRaise(gameState: any, playerAction: Action, playerActionAmount: number): BotAction[] {
   const botActions: BotAction[] = [];
-  const humanPlayer = gameState.players.find((p: Player) => p.isHuman);
   const botPlayers = gameState.players.filter((p: Player) => !p.isHuman && !p.folded);
   
   if (playerAction !== 'raise' || botPlayers.length === 0) {

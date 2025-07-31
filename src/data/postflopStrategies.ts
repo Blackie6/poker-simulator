@@ -1,4 +1,4 @@
-import { PostflopStrategy, BoardTexture, PotType, PostflopAction, Card } from '../types/poker';
+import { PostflopStrategy, BoardTexture, PotType, Card } from '../types/poker';
 
 // Postflop strategies based on the Russian poker chart
 export const postflopStrategies: PostflopStrategy = {
@@ -229,7 +229,7 @@ export function getBoardTexture(communityCards: Card[]): BoardTexture {
 }
 
 // Helper function to determine pot type
-export function getPotType(gameState: any): PotType {
+export function getPotType(): PotType {
   // Simplified logic - can be expanded based on betting history
   return 'single_raised'; // Default for now
 }

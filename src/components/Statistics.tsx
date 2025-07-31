@@ -7,6 +7,9 @@ interface StatisticsProps {
 }
 
 const Statistics: React.FC<StatisticsProps> = ({ history }) => {
+  console.log('Statistics component received history:', history.length, 'entries');
+  console.log('History entries:', history);
+  
   // Calculate player action statistics
   const totalActions = history.length;
   const correctActions = history.filter(entry => entry.isCorrect).length;

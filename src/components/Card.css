@@ -38,4 +38,38 @@
   font-size: 1.5rem;
   line-height: 1;
   margin-top: 2px;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .card {
+    width: 40px;
+    height: 56px;
+    border-radius: 6px;
+    border-width: 1px;
+  }
+  
+  .card-rank {
+    font-size: 1rem;
+  }
+  
+  .card-suit {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    width: 35px;
+    height: 49px;
+    border-radius: 5px;
+  }
+  
+  .card-rank {
+    font-size: 0.9rem;
+  }
+  
+  .card-suit {
+    font-size: 1rem;
+  }
 } 

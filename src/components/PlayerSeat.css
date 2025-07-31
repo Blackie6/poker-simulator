@@ -114,4 +114,93 @@
 
 .last-action.bet {
   background: rgba(255, 165, 0, 0.8);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .player-seat {
+    gap: 5px;
+  }
+  
+  .player-seat.current {
+    padding: 5px;
+    border-radius: 8px;
+  }
+  
+  .player-info {
+    padding: 6px 10px;
+    min-width: 100px;
+  }
+  
+  .player-name {
+    font-size: 0.8rem;
+  }
+  
+  .player-position {
+    font-size: 0.7rem;
+  }
+  
+  .player-hand {
+    font-size: 0.7rem;
+  }
+  
+  .player-chips {
+    font-size: 0.7rem;
+  }
+  
+  .dealer-button {
+    width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+  }
+  
+  .folded-indicator {
+    padding: 3px 6px;
+    font-size: 0.6rem;
+  }
+  
+  .last-action {
+    padding: 3px 6px;
+    font-size: 0.6rem;
+    margin-top: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-info {
+    padding: 4px 8px;
+    min-width: 80px;
+  }
+  
+  .player-name {
+    font-size: 0.7rem;
+  }
+  
+  .player-position {
+    font-size: 0.6rem;
+  }
+  
+  .player-hand {
+    font-size: 0.6rem;
+  }
+  
+  .player-chips {
+    font-size: 0.6rem;
+  }
+  
+  .dealer-button {
+    width: 14px;
+    height: 14px;
+    font-size: 0.5rem;
+  }
+  
+  .folded-indicator {
+    padding: 2px 4px;
+    font-size: 0.5rem;
+  }
+  
+  .last-action {
+    padding: 2px 4px;
+    font-size: 0.5rem;
+  }
 } 

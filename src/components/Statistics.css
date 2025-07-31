@@ -99,13 +99,45 @@
     bottom: 10px;
     width: 280px;
     max-height: 60vh;
+    padding: 12px;
   }
   
   .statistics-panel h3 {
     font-size: 16px;
+    margin-bottom: 12px;
   }
   
   .stat-item {
-    font-size: 13px;
+    font-size: 12px;
+    padding: 3px 0;
+  }
+  
+  .statistics-content {
+    max-height: calc(60vh - 50px);
+  }
+}
+
+@media (max-width: 480px) {
+  .statistics-panel {
+    right: 5px;
+    bottom: 5px;
+    width: calc(50vw - 10px);
+    max-width: 200px;
+    max-height: 50vh;
+    padding: 10px;
+  }
+  
+  .statistics-panel h3 {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .stat-item {
+    font-size: 11px;
+    padding: 2px 0;
+  }
+  
+  .statistics-content {
+    max-height: calc(50vh - 40px);
   }
 } 
